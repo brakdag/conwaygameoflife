@@ -7,11 +7,16 @@ class Gameoflife {
   constructor() {
       document.body.innerHTML = "<canvas width=256 height=256 id='c'></canvas>";
       const canvas =  document.getElementById('c');
-      const gpu = new GPU({
-        canvas: canvas,
-        mode: 'gpu'
-      });
 
+	  function initGPU() {
+	try {
+		return new window.GPU.GPU({canvas:canvas,mode:'gpu'});
+	} catch (e) {
+		return new GPU({canvas:canvas,mode:'gpu'});
+	}
+	}
+
+      const gpu = initGPU();
       const dim = 512;
 
       this.inicio = gpu.createKernel(
