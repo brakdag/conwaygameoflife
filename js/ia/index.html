@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Game of Life</title>
+</head>
+<body>
+    <canvas id="gameCanvas" width="512" height="512"></canvas>
+
+    <script>
+        const width = 512;
+        const height = 512;
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Buffers para el estado actual y siguiente
+        let current = new Uint8Array(width * height);
+        let next = new Uint8Array(width * height);
+        
+        // Inicialización aleatoria
+        for(let i = 0; i < width * height; i++) {
+            current[i] = Math.random() > 0.85 ? 1 : 0;
+        }
+
+        // Tabla de lookup precalculada
+        const lookupTable = new Uint8Array(18); // 2 estados * 9 vecinos posibles
+        (function createLookupTable() {
+            for(let state = 0; state <= 1; state++) {
+                for(let neighbors = 0; neighbors <= 8; neighbors++) {
+                    const index = state * 9 + neighbors;
+                    if(state === 1) {
+                        lookupTable[index] = (neighbors === 2 || neighbors === 3) ? 1 : 0;
+                    } else {
+                        lookupTable[index] = (neighbors === 3) ? 1 : 0;
+                    }
+                }
+            }
+        })();
+
+        // Configuración de ImageData para renderizado rápido
+        const imageData = ctx.createImageData(width, height);
+        const buf = new ArrayBuffer(imageData.data.length);
+        const buf8 = new Uint8ClampedArray(buf);
+        const buf32 = new Uint32Array(buf);
+
+        function update() {
+            for(let i = 0; i < width * height; i++) {
+                const x = i % width;
+                const y = (i / width) | 0;
+                
+                // Cálculo de vecinos con wrapping
+                const yPrev = (y - 1) & 511;
+                const yNext = (y + 1) & 511;
+                const xPrev = (x - 1) & 511;
+                const xNext = (x + 1) & 511;
+
+                // Suma de vecinos
+                const neighbors = 
+                    current[yPrev * width + xPrev] +
+                    current[yPrev * width + x] +
+                    current[yPrev * width + xNext] +
+                    current[y * width + xPrev] +
+                    current[y * width + xNext] +
+                    current[yNext * width + xPrev] +
+                    current[yNext * width + x] +
+                    current[yNext * width + xNext];
+
+                // Consulta a la tabla de lookup
+                next[i] = lookupTable[current[i] * 9 + neighbors];
+            }
+            [current, next] = [next, current]; // Swap de buffers
+        }
+
+        function draw() {
+            // Actualizar buffer gráfico
+            for(let i = 0; i < width * height; i++) {
+                buf32[i] = current[i] ? 0xFFFFFFFF : 0xFF000000;
+            }
+            imageData.data.set(buf8);
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Iniciar simulación
+        gameLoop();
+    </script>
+</body>
+</html>

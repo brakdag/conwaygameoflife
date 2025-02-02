@@ -1,0 +1,1 @@
+creame un gameoflife d conway, para html, el codigo embebido en javascript para 512x512 cada pixel sería una casilla, inicialmente los valores de estados de cada casilla es aleatorio. Para optimizar el código crea una tabla de forma que no haya que calcular el proximo estado de cada casilla sino que lo tome automáticamente de la tabla.
